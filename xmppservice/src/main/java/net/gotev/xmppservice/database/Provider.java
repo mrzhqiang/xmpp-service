@@ -65,6 +65,8 @@ public class Provider<T extends DatabaseModel> {
     protected long executeCountQuery(String where) {
         String query = "SELECT COUNT(*) FROM " + tableName + " WHERE " + where;
 
+        if (database == null) return 0;
+
         Cursor result = database.query(query);
 
         long total;
