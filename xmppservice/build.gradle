@@ -29,6 +29,12 @@ android {
     }
 }
 
+// needed to suppress warnings when using Smack library
+// http://stackoverflow.com/questions/31049735/can-not-run-application-below-lollipop
+configurations {
+    all*.exclude group: 'xpp3', module: 'xpp3'
+}
+
 dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:support-v4:23.2.0'
