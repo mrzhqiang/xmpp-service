@@ -50,10 +50,12 @@ public class XmppServiceConnection
     private byte[] mOwnAvatar;
     private SqLiteDatabase mDatabase;
     private XMPPTCPConnection mConnection;
+    private MessagesProvider mMessagesProvider;
 
     public XmppServiceConnection(XmppAccount account, SqLiteDatabase database) {
         mAccount = account;
         mDatabase = database;
+        mMessagesProvider = new MessagesProvider(mDatabase);
     }
 
     public void connect() throws IOException, XMPPException, SmackException {
@@ -456,6 +458,8 @@ public class XmppServiceConnection
             newEntry.setAvailable(presence.isAvailable())
                     .setPresenceMode(presence.getMode().ordinal())
                     .setPersonalMessage(presence.getStatus());
+
+            newEntry.setUnreadMessages(mMessagesProvider.countUnreadMessages(mAccount.getXmppJid(), entry.getUser()));
 
             newRoster.add(newEntry);
         }

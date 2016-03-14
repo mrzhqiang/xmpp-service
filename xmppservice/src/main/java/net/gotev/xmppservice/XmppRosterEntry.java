@@ -17,6 +17,7 @@ public class XmppRosterEntry implements Comparable<XmppRosterEntry> {
     private boolean available;
     private int presenceMode;
     private String personalMessage;
+    private long unreadMessages;
 
     public String getXmppJID() {
         return xmppJID;
@@ -78,6 +79,15 @@ public class XmppRosterEntry implements Comparable<XmppRosterEntry> {
         return this;
     }
 
+    public long getUnreadMessages() {
+        return unreadMessages;
+    }
+
+    public XmppRosterEntry setUnreadMessages(long unreadMessages) {
+        this.unreadMessages = unreadMessages;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -96,6 +106,12 @@ public class XmppRosterEntry implements Comparable<XmppRosterEntry> {
 
     @Override
     public int compareTo(XmppRosterEntry another) {
+        if (unreadMessages > another.unreadMessages)
+            return -1;
+
+        if (unreadMessages < another.unreadMessages)
+            return 1;
+
         int cmp = comparePresence(another);
 
         if (cmp == 0) {
