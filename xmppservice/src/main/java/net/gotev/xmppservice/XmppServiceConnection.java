@@ -305,7 +305,7 @@ public class XmppServiceConnection
     public void clearConversationsWith(String remoteAccount) {
         try {
             Logger.debug(TAG, "Clearing conversations with " + remoteAccount
-                         + " for " + mAccount.getXmppJid());
+                    + " for " + mAccount.getXmppJid());
 
             new MessagesProvider(mDatabase)
                     .deleteConversation(mAccount.getXmppJid(), remoteAccount)
@@ -402,37 +402,126 @@ public class XmppServiceConnection
         }
     }
 
-    // roster listener implementation
+    // start roster listener implementation
     @Override
     public void entriesAdded(Collection<String> addresses) {
-        if (addresses != null && !addresses.isEmpty()) {
-            for (String destination : addresses) {
-                sendSubscriptionRequestTo(destination);
-            }
-        }
-        rebuildRoster();
+        entriesUpdated(addresses);
     }
 
     @Override
     public void entriesUpdated(Collection<String> addresses) {
-        rebuildRoster();
+        if (addresses == null || addresses.isEmpty()) {
+            return;
+        }
+
+        Roster roster = Roster.getInstanceFor(mConnection);
+        if (roster == null) {
+            Logger.info(TAG, "entriesUpdated - No roster instance, skipping rebuild roster");
+            return;
+        }
+
+        ArrayList<XmppRosterEntry> entries = getRosterEntries();
+        if (entries == null || entries.isEmpty()) {
+            Logger.info(TAG, "entriesUpdated - No roster entries. Skipping rebuild roster");
+            return;
+        }
+
+        for (String destination : addresses) {
+            destination = getXmppJid(destination);
+            RosterEntry entry = roster.getEntry(destination);
+            XmppRosterEntry xmppRosterEntry = getRosterEntryFor(roster, entry);
+            int index = entries.indexOf(xmppRosterEntry);
+            if (index < 0) {
+                entries.add(xmppRosterEntry);
+            } else {
+                entries.set(index, xmppRosterEntry);
+            }
+
+        }
+
+        Collections.sort(entries);
+        XmppServiceBroadcastEventEmitter.broadcastRosterChanged();
     }
 
     @Override
     public void entriesDeleted(Collection<String> addresses) {
-        if (addresses != null && !addresses.isEmpty()) {
-            for (String destination : addresses) {
-                sendUnsubscriptionRequestTo(destination);
+        if (addresses == null || addresses.isEmpty()) {
+            return;
+        }
+
+        for (String destination : addresses) {
+            destination = getXmppJid(destination);
+            sendUnsubscriptionRequestTo(destination);
+
+            Roster roster = Roster.getInstanceFor(mConnection);
+            if (roster == null) {
+                Logger.info(TAG, "presenceChanged - No roster instance, skipping rebuild roster");
+                return;
+            }
+
+            ArrayList<XmppRosterEntry> entries = getRosterEntries();
+            if (entries == null || entries.isEmpty()) {
+                Logger.info(TAG, "presenceChanged - No roster entries. Skipping rebuild roster");
+                return;
+            }
+
+            int index = entries.indexOf(new XmppRosterEntry().setXmppJID(destination));
+            if (index >= 0) {
+                entries.remove(index);
             }
         }
-        rebuildRoster();
+
+        XmppServiceBroadcastEventEmitter.broadcastRosterChanged();
     }
 
     @Override
     public void presenceChanged(Presence presence) {
-        rebuildRoster();
+        Roster roster = Roster.getInstanceFor(mConnection);
+        if (roster == null) {
+            Logger.info(TAG, "presenceChanged - No roster instance, skipping rebuild roster");
+            return;
+        }
+
+        ArrayList<XmppRosterEntry> entries = getRosterEntries();
+        if (entries == null || entries.isEmpty()) {
+            Logger.info(TAG, "presenceChanged - No roster entries. Skipping rebuild roster");
+            return;
+        }
+
+        String from = getXmppJid(presence.getFrom());
+        int index = entries.indexOf(new XmppRosterEntry().setXmppJID(from));
+
+        if (index < 0) {
+            Logger.info(TAG, "Presence from " + from + " which is not in the roster. Skipping rebuild roster");
+            return;
+        }
+
+        Presence rosterPresence = roster.getPresence(from);
+        entries.get(index)
+               .setAvailable(rosterPresence.isAvailable())
+               .setPresenceMode(rosterPresence.getMode().ordinal())
+               .setPersonalMessage(rosterPresence.getStatus());
+
+        Collections.sort(entries);
+        XmppServiceBroadcastEventEmitter.broadcastRosterChanged();
     }
-    // roster listener implementation
+    // end roster listener implementation
+
+    private String getXmppJid(String destination) {
+        if (destination.contains("/")) {
+            return destination.split("/")[0];
+        }
+
+        return destination;
+    }
+
+    private ArrayList<XmppRosterEntry> getRosterEntries() {
+        ArrayList<XmppRosterEntry> entries = XmppService.getRosterEntries();
+        if (entries == null || entries.isEmpty()) {
+            rebuildRoster();
+        }
+        return XmppService.getRosterEntries();
+    }
 
     private void rebuildRoster() {
         Roster roster = Roster.getInstanceFor(mConnection);
@@ -445,28 +534,33 @@ public class XmppServiceConnection
         ArrayList<XmppRosterEntry> newRoster = new ArrayList<>(entries.size());
 
         for (RosterEntry entry : entries) {
-            XmppRosterEntry newEntry = new XmppRosterEntry();
-            newEntry.setXmppJID(entry.getUser())
-                    .setAlias(entry.getName())
-                    .setAvatar(getCachedAvatar(entry.getUser()));
-
-            if (newEntry.getAvatar() == null) {
-                newEntry.setAvatar(getAvatarFor(entry.getUser()));
-            }
-
-            Presence presence = roster.getPresence(entry.getUser());
-            newEntry.setAvailable(presence.isAvailable())
-                    .setPresenceMode(presence.getMode().ordinal())
-                    .setPersonalMessage(presence.getStatus());
-
-            newEntry.setUnreadMessages(mMessagesProvider.countUnreadMessages(mAccount.getXmppJid(), entry.getUser()));
-
+            XmppRosterEntry newEntry = getRosterEntryFor(roster, entry);
             newRoster.add(newEntry);
         }
 
         Collections.sort(newRoster);
         XmppService.setRosterEntries(newRoster);
         XmppServiceBroadcastEventEmitter.broadcastRosterChanged();
+    }
+
+    private XmppRosterEntry getRosterEntryFor(Roster roster, RosterEntry entry) {
+        XmppRosterEntry newEntry = new XmppRosterEntry();
+        newEntry.setXmppJID(entry.getUser())
+                .setAlias(entry.getName())
+                .setAvatar(getCachedAvatar(entry.getUser()));
+
+        if (newEntry.getAvatar() == null) {
+            newEntry.setAvatar(getAvatarFor(entry.getUser()));
+        }
+
+        Presence presence = roster.getPresence(entry.getUser());
+        newEntry.setAvailable(presence.isAvailable())
+                .setPresenceMode(presence.getMode().ordinal())
+                .setPersonalMessage(presence.getStatus());
+
+        newEntry.setUnreadMessages(mMessagesProvider.countUnreadMessages(mAccount.getXmppJid(), entry.getUser()));
+
+        return newEntry;
     }
 
     private void sendSubscriptionRequestTo(String destination) {
