@@ -158,6 +158,7 @@ public class XmppService extends BackgroundService {
         }
 
         connected = false;
+        rosterEntries = null;
 
         super.onDestroy();
     }
