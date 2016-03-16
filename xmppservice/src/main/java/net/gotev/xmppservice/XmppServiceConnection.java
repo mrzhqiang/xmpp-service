@@ -127,6 +127,12 @@ public class XmppServiceConnection
         mConnection.addConnectionListener(this);
     }
 
+    private void singleEntryUpdated(String entry) {
+        List<String> entries = new ArrayList<>(1);
+        entries.add(entry);
+        entriesUpdated(entries);
+    }
+
     public void addMessageAndProcessPending(String destinationJID, String message) throws SmackException.NotConnectedException {
         saveMessage(destinationJID, message, false);
         sendPendingMessages();
@@ -144,6 +150,9 @@ public class XmppServiceConnection
             }
 
             insertTransaction.execute();
+            if (incoming) {
+                singleEntryUpdated(remoteAccount);
+            }
             XmppServiceBroadcastEventEmitter.broadcastMessageAdded(remoteAccount, incoming);
 
         } catch (Exception exc) {
