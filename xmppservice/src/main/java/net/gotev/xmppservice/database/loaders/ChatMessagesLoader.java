@@ -6,6 +6,7 @@ import android.support.v4.content.AsyncTaskLoader;
 
 import net.gotev.xmppservice.Logger;
 import net.gotev.xmppservice.XmppServiceBroadcastEventReceiver;
+import net.gotev.xmppservice.XmppServiceCommand;
 import net.gotev.xmppservice.database.SqLiteDatabase;
 import net.gotev.xmppservice.database.models.Message;
 import net.gotev.xmppservice.database.providers.MessagesProvider;
@@ -98,6 +99,7 @@ public class ChatMessagesLoader extends AsyncTaskLoader<List<Message>> {
 
         try {
             messagesProvider.setReadMessages(readMessageIds).execute();
+            XmppServiceCommand.refreshContact(getContext(), mRemoteAccount);
         } catch (Exception exc) {
             Logger.error("MessagesLoader", "Error while setting read messages", exc);
         }

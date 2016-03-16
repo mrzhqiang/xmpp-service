@@ -20,6 +20,7 @@ import static net.gotev.xmppservice.XmppServiceCommand.ACTION_DELETE_MESSAGE;
 import static net.gotev.xmppservice.XmppServiceCommand.ACTION_DISCONNECT;
 import static net.gotev.xmppservice.XmppServiceCommand.ACTION_REMOVE_CONTACT;
 import static net.gotev.xmppservice.XmppServiceCommand.ACTION_RENAME_CONTACT;
+import static net.gotev.xmppservice.XmppServiceCommand.ACTION_REFRESH_CONTACT;
 import static net.gotev.xmppservice.XmppServiceCommand.ACTION_SEND;
 import static net.gotev.xmppservice.XmppServiceCommand.ACTION_SEND_PENDING_MESSAGES;
 import static net.gotev.xmppservice.XmppServiceCommand.ACTION_SET_AVATAR;
@@ -210,6 +211,9 @@ public class XmppService extends BackgroundService {
                 } else if (ACTION_RENAME_CONTACT.equals(action)) {
                     handleRenameContact(intent);
 
+                } else if (ACTION_REFRESH_CONTACT.equals(action)) {
+                    handleRefreshContact(intent);
+
                 } else if (ACTION_CLEAR_CONVERSATIONS.equals(action)) {
                     handleClearConversations(intent);
 
@@ -317,6 +321,12 @@ public class XmppService extends BackgroundService {
         } catch (Exception exc) {
             Logger.error(TAG, "Error while renaming contact: " + remoteAccount, exc);
         }
+    }
+
+    private void handleRefreshContact(Intent intent) {
+        String remoteAccount = intent.getStringExtra(PARAM_REMOTE_ACCOUNT);
+
+        mConnection.singleEntryUpdated(remoteAccount);
     }
 
     private void handleClearConversations(Intent intent) {

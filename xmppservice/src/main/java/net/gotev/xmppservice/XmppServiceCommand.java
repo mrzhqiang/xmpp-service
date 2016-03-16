@@ -16,6 +16,7 @@ public class XmppServiceCommand {
     protected static final String ACTION_REMOVE_CONTACT = ".xmpp.removecontact";
     protected static final String ACTION_CLEAR_CONVERSATIONS = ".xmpp.clearconversations";
     protected static final String ACTION_RENAME_CONTACT = ".xmpp.renamecontact";
+    protected static final String ACTION_REFRESH_CONTACT = ".xmpp.refreshcontact";
     protected static final String ACTION_SEND_PENDING_MESSAGES = ".xmpp.sendpending";
     protected static final String ACTION_SET_AVATAR = ".xmpp.setavatar";
     protected static final String ACTION_DELETE_MESSAGE = ".xmpp.deletemessage";
@@ -115,6 +116,18 @@ public class XmppServiceCommand {
         intent.setAction(ACTION_RENAME_CONTACT);
         intent.putExtra(PARAM_REMOTE_ACCOUNT, remoteAccount);
         intent.putExtra(PARAM_ALIAS, newAlias);
+        context.startService(intent);
+    }
+
+    /**
+     * Refreshes a contact in the roster.
+     * @param context application context
+     * @param remoteAccount xmpp JID to refresh
+     */
+    public static void refreshContact(Context context, String remoteAccount) {
+        final Intent intent = new Intent(context, XmppService.class);
+        intent.setAction(ACTION_REFRESH_CONTACT);
+        intent.putExtra(PARAM_REMOTE_ACCOUNT, remoteAccount);
         context.startService(intent);
     }
 

@@ -127,7 +127,10 @@ public class XmppServiceConnection
         mConnection.addConnectionListener(this);
     }
 
-    private void singleEntryUpdated(String entry) {
+    public void singleEntryUpdated(String entry) {
+        if (entry == null || entry.isEmpty())
+            return;
+
         List<String> entries = new ArrayList<>(1);
         entries.add(entry);
         entriesUpdated(entries);
