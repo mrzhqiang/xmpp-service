@@ -326,7 +326,8 @@ public class XmppService extends BackgroundService {
     private void handleRefreshContact(Intent intent) {
         String remoteAccount = intent.getStringExtra(PARAM_REMOTE_ACCOUNT);
 
-        mConnection.singleEntryUpdated(remoteAccount);
+        if (mConnection != null)
+            mConnection.singleEntryUpdated(remoteAccount);
     }
 
     private void handleClearConversations(Intent intent) {
