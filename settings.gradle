@@ -1,1 +1,1 @@
-include ':xmppservice'
+include ':xmppservice','sample'

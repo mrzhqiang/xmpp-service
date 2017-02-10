@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--预览页面目录-->
+    <string-array name="xmpp_demo_function">
+        <item>Login</item>
+        <item>Roster</item>
+        <item>Message</item>
+        <item>Other</item>
+    </string-array>
+
+    <!--目录下的子菜单-->
+    <string-array name="function_array">
+        <item>@array/xmpp_login</item>
+        <item>@array/xmpp_roster</item>
+        <item>@array/xmpp_message</item>
+        <item>@array/xmpp_other</item>
+    </string-array>
+
+    <!--登陆菜单-->
+    <string-array name="xmpp_login">
+        <item>Connection</item>
+        <item>SignUp</item>
+        <item>SignIn</item>
+        <item>Disconnection</item>
+    </string-array>
+
+    <!--花名册菜单-->
+    <string-array name="xmpp_roster">
+        <item>FriendList</item>
+        <item>AddFriend</item>
+        <item>ChangeFriend</item>
+        <item>MoveFriend</item>
+        <item>DeleteFriend</item>
+    </string-array>
+
+    <!--消息菜单-->
+    <string-array name="xmpp_message">
+        <item>Send Normal</item>
+        <item>Pending</item>
+        <item>Get Off-line</item>
+        <item>Packet</item>
+    </string-array>
+
+    <!--其他菜单-->
+    <string-array name="xmpp_other">
+        <item>IQ</item>
+        <item>Subscription</item>
+        <item>Release</item>
+        <item>Notification</item>
+        <item>Test function</item>
+    </string-array>
+</resources>
