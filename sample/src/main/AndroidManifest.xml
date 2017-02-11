@@ -24,7 +24,7 @@
         <service
             android:name="net.gotev.xmppservice.XmppService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="true"/>
     </application>
 
 </manifest>
